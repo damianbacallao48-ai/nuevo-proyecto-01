@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menú Digital | Ciego de Ávila</title>
+  <!-- Tailwind CSS para diseño ligero y rápido -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased pb-28">
+
+  <!-- Header del Negocio -->
+  <header class="bg-slate-900 text-white p-5 shadow-md sticky top-0 z-30">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">El Menú Avileño</h1>
+        <p class="text-xs text-emerald-400 font-medium">Abierto • Ciego de Ávila</p>
+      </div>
+      <a href="https://wa.me/5358960660" target="_blank" class="text-xs bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-full font-semibold transition">
+        Soporte
+      </a>
+    </div>
+  </header>
+
+  <!-- Filtro de Categorías -->
+  <nav class="bg-white border-b border-slate-200 sticky top-[68px] z-20">
+    <div class="max-w-md mx-auto flex gap-2 overflow-x-auto p-3 no-scrollbar" id="contenedor-categorias">
+      <!-- Se inyecta dinámicamente -->
+    </div>
+  </nav>
+
+  <!-- Listado de Productos -->
+  <main class="max-w-md mx-auto p-4 space-y-4" id="contenedor-productos">
+    <!-- Se inyecta dinámicamente -->
+  </main>
+
+  <!-- Barra Flotante del Carrito -->
+  <div id="barra-carrito" class="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-200 hidden z-30">
+    <div class="max-w-md mx-auto flex items-center justify-between gap-4">
+      <div>
+        <span class="text-xs text-slate-500 font-medium" id="cant-items">0 productos</span>
+        <div class="text-lg font-black text-slate-900" id="total-barra">$0 CUP</div>
+      </div>
+      <button onclick="abrirModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-xl shadow-lg transition text-sm">
+        Ver Pedido
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal de Finalizar Pedido -->
+  <div id="modal-pedido" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="text-lg font-bold">Completar Pedido</h3>
+        <button onclick="cerrarModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      </div>
+
+      <!-- Resumen del pedido -->
+      <div id="lista-resumen" class="space-y-2 text-sm divide-y divide-slate-100 max-h-40 overflow-y-auto pr-1"></div>
+
+      <!-- Formulario del Cliente -->
+      <form id="form-cliente" class="space-y-3 pt-2" onsubmit="enviarAWhatsApp(event)">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Tu Nombre</label>
+          <input type="text" id="cli-nombre" required placeholder="Ej: Carlos" class="w-full text-sm border rounded-lg p-2.5 outline-none focus:border-emerald-500 bg-slate-50">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Modalidad de entrega</label>
+          <select id="cli-tipo" class="w-full text-sm border rounded-lg p-2.5 outline-none focus:border-emerald-500 bg-slate-50" onchange="toggleDireccion(this.value)">
+            <option value="En el local">Consumo en el local / Mesa</option>
+            <option value="Para llevar">Recoger para llevar</option>
+            <option value="A domicilio">Envío a domicilio</option>
+          </select>
+        </div>
+
+        <div id="campo-direccion">
+          <label class="block text-xs font-semibold text-slate-600 mb-1" id="label-direccion">Número de Mesa</label>
+          <input type="text" id="cli-ubicacion" required placeholder="Ej: Mesa 4" class="w-full text-sm border rounded-lg p-2.5 outline-none focus:border-emerald-500 bg-slate-50">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Nota adicional (Opcional)</label>
+          <input type="text" id="cli-nota" placeholder="Ej: Salsa aparte, refresco bien frío" class="w-full text-sm border rounded-lg p-2.5 outline-none focus:border-emerald-500 bg-slate-50">
+        </div>
+
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md text-sm mt-4 flex items-center justify-center gap-2">
+          <span>Enviar Pedido por WhatsApp</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Configuración general
+    const WHATSAPP_NUMERO = "5358960660";
+
+    // Base de datos de productos
+    const productos = [
+      { id: 1, cat: "Pizzas", nombre: "Pizza Queso Gouda", desc: "Salsa casera y abundante queso gouda", precio: 1200, disponible: true },
+      { id: 2, cat: "Pizzas", nombre: "Pizza Jamón y Queso", desc: "Jamón prensado y queso gouda gratinado", precio: 1450, disponible: true },
+      { id: 3, cat: "Pizzas", nombre: "Pizza Mixta Especial", desc: "Jamón, chorizo, pimiento y extra queso", precio: 1800, disponible: false },
+      { id: 4, cat: "Bebidas", nombre: "Cerveza Cristal (Lata)", desc: "Nacional fría 355ml", precio: 380, disponible: true },
+      { id: 5, cat: "Bebidas", nombre: "Refresco TuKola (Lata)", desc: "Refresco nacional 355ml", precio: 280, disponible: true },
+      { id: 6, cat: "Postres", nombre: "Flan de la Casa", desc: "Receta tradicional con caramelo artesanal", precio: 450, disponible: true }
+    ];
+
+    let categoriaActiva = "Todas";
+    let carrito = {};
+
+    function renderizarCategorias() {
+      const categorias = ["Todas", ...new Set(productos.map(p => p.cat))];
+      const nav = document.getElementById("contenedor-categorias");
+      nav.innerHTML = categorias.map(cat => `
+        <button onclick="cambiarCategoria('${cat}')" 
+          class="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${
+            categoriaActiva === cat 
+            ? 'bg-slate-900 text-white' 
+            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }">
+          ${cat}
+        </button>
+      `).join('');
+    }
+
+    function cambiarCategoria(cat) {
+      categoriaActiva = cat;
+      renderizarCategorias();
+      renderizarProductos();
+    }
+
+    function renderizarProductos() {
+      const contenedor = document.getElementById("contenedor-productos");
+      const filtrados = categoriaActiva === "Todas" 
+        ? productos 
+        : productos.filter(p => p.cat === categoriaActiva);
+
+      contenedor.innerHTML = filtrados.map(prod => {
+        const cant = carrito[prod.id] || 0;
+        return `
+          <div class="bg-white rounded-xl p-4 border border-slate-200/80 shadow-sm flex justify-between items-center gap-3 ${!prod.disponible ? 'opacity-60' : ''}">
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <h4 class="font-bold text-slate-900 text-sm leading-snug">${prod.nombre}</h4>
+                ${!prod.disponible ? '<span class="text-[10px] bg-red-100 text-red-600 font-bold px-1.5 py-0.5 rounded">Agotado</span>' : ''}
+              </div>
+              <p class="text-xs text-slate-500 mt-1 line-clamp-2">${prod.desc}</p>
+              <span class="inline-block font-extrabold text-slate-900 text-sm mt-2">$${prod.precio} CUP</span>
+            </div>
+
+            <div>
+              ${prod.disponible ? `
+                <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1">
+                  <button onclick="modificarCantidad(${prod.id}, -1)" class="w-7 h-7 flex items-center justify-center rounded bg-white text-slate-700 shadow-sm font-bold text-sm hover:bg-slate-100">-</button>
+                  <span class="text-xs font-bold w-4 text-center">${cant}</span>
+                  <button onclick="modificarCantidad(${prod.id}, 1)" class="w-7 h-7 flex items-center justify-center rounded bg-slate-900 text-white font-bold text-sm hover:bg-slate-800">+</button>
+                </div>
+              ` : `
+                <span class="text-xs text-slate-400 font-semibold px-2">No disp.</span>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function modificarCantidad(id, delta) {
+      carrito[id] = (carrito[id] || 0) + delta;
+      if (carrito[id] <= 0) delete carrito[id];
+      renderizarProductos();
+      actualizarBarraCarrito();
+    }
+
+    function actualizarBarraCarrito() {
+      const barra = document.getElementById("barra-carrito");
+      const cantItems = Object.values(carrito).reduce((a, b) => a + b, 0);
+      let total = 0;
+
+      for (const id in carrito) {
+        const prod = productos.find(p => p.id == id);
+        if (prod) total += prod.precio * carrito[id];
+      }
+
+      if (cantItems > 0) {
+        barra.classList.remove("hidden");
+        document.getElementById("cant-items").innerText = `${cantItems} producto(s)`;
+        document.getElementById("total-barra").innerText = `$${total.toLocaleString()} CUP`;
+      } else {
+        barra.classList.add("hidden");
+      }
+    }
+
+    function abrirModal() {
+      const modal = document.getElementById("modal-pedido");
+      const lista = document.getElementById("lista-resumen");
+      lista.innerHTML = "";
+
+      for (const id in carrito) {
+        const prod = productos.find(p => p.id == id);
+        const subtotal = prod.precio * carrito[id];
+        lista.innerHTML += `
+          <div class="flex justify-between py-1.5">
+            <span><b>${carrito[id]}x</b> ${prod.nombre}</span>
+            <span class="font-bold">$${subtotal} CUP</span>
+          </div>
+        `;
+      }
+      modal.classList.remove("hidden");
+    }
+
+    function cerrarModal() {
+      document.getElementById("modal-pedido").classList.add("hidden");
+    }
+
+    function toggleDireccion(tipo) {
+      const label = document.getElementById("label-direccion");
+      const input = document.getElementById("cli-ubicacion");
+      if (tipo === "En el local") {
+        label.innerText = "Número de Mesa";
+        input.placeholder = "Ej: Mesa 3";
+      } else if (tipo === "A domicilio") {
+        label.innerText = "Dirección de entrega";
+        input.placeholder = "Ej: Calle Marcial Gómez entre...";
+      } else {
+        label.innerText = "Hora aprox. de recogida";
+        input.placeholder = "Ej: En 30 minutos";
+      }
+    }
+
+    function enviarAWhatsApp(e) {
+      e.preventDefault();
+
+      const nombre = document.getElementById("cli-nombre").value;
+      const modalidad = document.getElementById("cli-tipo").value;
+      const ubicacion = document.getElementById("cli-ubicacion").value;
+      const nota = document.getElementById("cli-nota").value;
+
+      let mensaje = `*¡NUEVO PEDIDO!*\n`;
+      mensaje += `──────────────────────\n`;
+      mensaje += `👤 *Cliente:* ${nombre}\n`;
+      mensaje += `📍 *Modalidad:* ${modalidad}\n`;
+      mensaje += `📌 *Detalle:* ${ubicacion}\n`;
+      if (nota) mensaje += `📝 *Nota:* ${nota}\n`;
+      mensaje += `──────────────────────\n\n`;
+      mensaje += `*PEDIDO:*\n`;
+
+      let total = 0;
+      for (const id in carrito) {
+        const prod = productos.find(p => p.id == id);
+        const subtotal = prod.precio * carrito[id];
+        total += subtotal;
+        mensaje += `• ${carrito[id]}x ${prod.nombre} ($${subtotal} CUP)\n`;
+      }
+
+      mensaje += `\n💰 *TOTAL A PAGAR:* $${total.toLocaleString()} CUP\n`;
+      mensaje += `──────────────────────`;
+
+      const enlace = `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensaje)}`;
+      window.open(enlace, "_blank");
+    }
+
+    // Inicializar
+    renderizarCategorias();
+    renderizarProductos();
+  </script>
+</body>
+</html>
