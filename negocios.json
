@@ -1,0 +1,66 @@
+{
+  "piscina-avion": {
+    "nombre": "La Piscina del Avión",
+    "whatsapp": "5358960660",
+    "slogan": "Recreación y gastronomía en Ciego de Ávila",
+    "moneda": "CUP",
+    "productos": [
+      {
+        "id": 1,
+        "cat": "Entradas",
+        "nombre": "Croquetas Caseras (6 un)",
+        "desc": "De jamón y queso con salsa tártara",
+        "precio": 650,
+        "disponible": true
+      },
+      {
+        "id": 2,
+        "cat": "Platos Fuertes",
+        "nombre": "Filete de Cerdo Asado",
+        "desc": "Con congrí, vianda con mojo y ensalada de estación",
+        "precio": 2200,
+        "disponible": true
+      },
+      {
+        "id": 3,
+        "cat": "Bebidas",
+        "nombre": "Cerveza Cristal (Lata)",
+        "desc": "Nacional bien fría 355ml",
+        "precio": 380,
+        "disponible": true
+      },
+      {
+        "id": 4,
+        "cat": "Coctelería",
+        "nombre": "Piña Colada",
+        "desc": "Tradicional con ron y crema de coco",
+        "precio": 700,
+        "disponible": true
+      }
+    ]
+  },
+  "cafeteria-central": {
+    "nombre": "Cafetería Central",
+    "whatsapp": "5358960660",
+    "slogan": "Pizzas y café en el centro de Ciego",
+    "moneda": "CUP",
+    "productos": [
+      {
+        "id": 1,
+        "cat": "Pizzas",
+        "nombre": "Pizza Gouda Especial",
+        "desc": "Salsa criolla, abundante queso y jamón",
+        "precio": 1500,
+        "disponible": true
+      },
+      {
+        "id": 2,
+        "cat": "Bebidas",
+        "nombre": "Refresco TuKola (Lata)",
+        "desc": "Nacional frío 355ml",
+        "precio": 280,
+        "disponible": true
+      }
+    ]
+  }
+}
